@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageHeader, PageSkeleton, NoData, StatusBadge, KpiCard } from '@/components/common'
+import { DistributionPie } from '@/components/charts'
 import { OptionSelect } from '@/components/option-select'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,7 +22,7 @@ import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { ShoppingCart, Receipt, Hash, Package } from 'lucide-react'
-import { formatCOP, formatDate, formatNumber } from '@/lib/format'
+import { formatCOP, formatDate, formatNumber, shortName } from '@/lib/format'
 import { useNexa } from '@/lib/store'
 import { STATUSES, type Operation, type OperationKind, type OperationStatus } from '@/lib/types'
 
@@ -290,6 +291,14 @@ export function OperationsPage({ kind }: { kind: OperationKind }) {
   const total = active.reduce((acc, op) => acc + op.total, 0)
   const units = active.reduce((acc, op) => acc + op.quantity, 0)
 
+  const byProduct = new Map<string, number>()
+  for (const op of active) byProduct.set(op.productName, (byProduct.get(op.productName) ?? 0) + op.total)
+  const ranked = [...byProduct.entries()].sort((a, b) => b[1] - a[1])
+  const pieData = [
+    ...ranked.slice(0, 4).map(([name, value]) => ({ name: shortName(name), value })),
+    ...(ranked.length > 4 ? [{ name: 'Otros', value: ranked.slice(4).reduce((acc, [, value]) => acc + value, 0) }] : []),
+  ]
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -317,6 +326,25 @@ export function OperationsPage({ kind }: { kind: OperationKind }) {
         <KpiCard label="Unidades" value={formatNumber(units)} icon={Package} />
         <KpiCard label="Promedio por operación" value={active.length ? formatCOP(total / active.length) : '—'} icon={Hash} />
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Distribución de {isPurchase ? 'compras' : 'ventas'} por producto</CardTitle>
+          <CardDescription>
+            Participación de cada producto en el total {isPurchase ? 'comprado' : 'vendido'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pieData.length ? (
+            <DistributionPie
+              data={pieData}
+              format={formatCOP}
+              label={`Distribución de ${isPurchase ? 'compras' : 'ventas'} por producto`}
+            />
+          ) : (
+            <NoData />
+          )}
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Registro de {isPurchase ? 'compras' : 'ventas'}</CardTitle>
