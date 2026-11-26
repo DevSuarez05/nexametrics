@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Activity, Percent, Receipt, Scale, ShoppingCart, Trophy } from 'lucide-react'
 import { GroupedBars, PURCHASE_SERIES, SALES_SERIES, TrendLines } from '@/components/charts'
-import { KpiCard, NoData, PageHeader, PageSkeleton } from '@/components/common'
+import { OverviewHeader } from '@/components/overview-header'
+import { KpiCard, NoData, PageSkeleton } from '@/components/common'
 import { OperationsTable } from '@/components/operations-page'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { monthlySeries, productStats, summarize, topByTotal } from '@/lib/analytics'
@@ -26,10 +27,7 @@ function Overview() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Overview"
-        description="Conoce tus números de un vistazo: lo que compras, lo que vendes y la diferencia entre ambos."
-      />
+      <OverviewHeader />
       <div className="grid grid-cols-2 gap-4 @4xl/main:grid-cols-3 @6xl/main:grid-cols-6">
         <KpiCard label="Total compras" value={formatCOP(s.purchaseTotal)} icon={ShoppingCart} detail={`${s.purchaseCount} operaciones`} />
         <KpiCard label="Total ventas" value={formatCOP(s.salesTotal)} icon={Receipt} detail={`${s.saleCount} operaciones`} />

@@ -1,70 +1,63 @@
-import { useMemo, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { useMemo, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
-function readColor(name: string, fallback: string) {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  try {
-    return new THREE.Color(v || fallback)
-  } catch {
-    return new THREE.Color(fallback)
-  }
-}
-
-function Particles() {
-  const ref = useRef<THREE.Points>(null)
-  const { positions, color } = useMemo(() => {
-    const count = 900
-    const arr = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      const r = 6 + Math.random() * 10
-      const t = Math.random() * Math.PI * 2
-      const p = Math.acos(2 * Math.random() - 1)
-      arr[i * 3] = r * Math.sin(p) * Math.cos(t)
-      arr[i * 3 + 1] = r * Math.sin(p) * Math.sin(t)
-      arr[i * 3 + 2] = r * Math.cos(p)
+function SignalRibbon() {
+  const group = useRef<THREE.Group>(null);
+  const positions = useMemo(() => {
+    const vertices: number[] = [];
+    const point = (x: number, lane: number) => [
+      x,
+      Math.sin(x * 1.25 + lane * 0.8) * 0.55 + Math.sin(x * 0.7) * 0.24 + lane * 0.27,
+      lane * 0.7,
+    ];
+    for (let i = 0; i < 36; i++) {
+      const lane = (i / 35) * 2 - 1;
+      for (let j = 0; j < 100; j++)
+        vertices.push(...point(-6 + j * 0.12, lane), ...point(-6 + (j + 1) * 0.12, lane));
     }
-    return { positions: arr, color: readColor('--chart-2', '#3b82f6') }
-  }, [])
-  useFrame((state, delta) => {
-    if (!ref.current) return
-    const d = Math.min(delta, 0.05)
-    ref.current.rotation.y += d * 0.04
-    ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.15
-  })
+    return new Float32Array(vertices);
+  }, []);
+  useFrame(({ pointer, clock }, delta) => {
+    if (!group.current) return;
+    const t = clock.elapsedTime;
+    group.current.rotation.x = THREE.MathUtils.damp(
+      group.current.rotation.x,
+      0.32 + pointer.y * 0.21 + Math.sin(t * 0.4) * 0.08,
+      4,
+      delta,
+    );
+    group.current.rotation.y = THREE.MathUtils.damp(
+      group.current.rotation.y,
+      pointer.x * 0.14,
+      4,
+      delta,
+    );
+    group.current.rotation.z = 0.12 + Math.sin(t * 0.28) * 0.025;
+  });
   return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.05} color={color} transparent opacity={0.7} sizeAttenuation depthWrite={false} />
-    </points>
-  )
+    <group ref={group}>
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial color="#55e1c7" transparent opacity={0.74} depthWrite={false} />
+      </lineSegments>
+    </group>
+  );
 }
 
-function Knot() {
-  const ref = useRef<THREE.Mesh>(null)
-  const color = useMemo(() => readColor('--chart-1', '#6366f1'), [])
-  useFrame((state, delta) => {
-    if (!ref.current) return
-    const d = Math.min(delta, 0.05)
-    ref.current.rotation.x += d * 0.12
-    ref.current.rotation.y += d * 0.18
-    ref.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.3
-  })
+export default function SignalScene() {
   return (
-    <mesh ref={ref} position={[3.5, 0, -2]}>
-      <torusKnotGeometry args={[1.4, 0.35, 160, 16]} />
-      <meshBasicMaterial color={color} wireframe transparent opacity={0.18} />
-    </mesh>
-  )
-}
-
-export default function ThreeBackground() {
-  return (
-    <Canvas camera={{ position: [0, 0, 9], fov: 55 }} dpr={[1, 1.5]} gl={{ alpha: true, antialias: true }}>
-      <Particles />
-      <Knot />
-    </Canvas>
-  )
+    <div className="signal-canvas absolute inset-0">
+      <Canvas
+        camera={{ position: [0, 0, 4], fov: 40 }}
+        dpr={[1, 1.25]}
+        gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
+        fallback={null}
+      >
+        <SignalRibbon />
+      </Canvas>
+    </div>
+  );
 }

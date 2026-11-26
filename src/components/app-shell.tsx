@@ -1,26 +1,6 @@
 'use client'
 
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
-
-const ThreeBackground = lazy(() => import('@/components/three-background'))
-
-function AnimatedBackdrop() {
-  const [ready, setReady] = useState(false)
-  useEffect(() => {
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setReady(true)
-  }, [])
-  return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 opacity-60 animate-fade-in print:hidden">
-      <div className="absolute -top-32 -left-24 size-96 rounded-full bg-chart-1/20 blur-3xl animate-blob" />
-      <div className="absolute top-1/3 -right-24 size-96 rounded-full bg-chart-2/20 blur-3xl animate-blob [animation-delay:-6s]" />
-      {ready && (
-        <Suspense fallback={null}>
-          <ThreeBackground />
-        </Suspense>
-      )}
-    </div>
-  )
-}
+import { useState, type ReactNode } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import {
@@ -90,12 +70,12 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/75 outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+              'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/75 outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring',
               active &&
                 'bg-sidebar-accent text-sidebar-accent-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-primary',
             )}
           >
-            <Icon className={cn('size-4 shrink-0', active && 'text-sidebar-primary')} aria-hidden="true" />
+            <Icon className={cn('size-4 shrink-0 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5 motion-safe:group-focus-visible:translate-x-0.5', active && 'text-sidebar-primary')} aria-hidden="true" />
             {label}
           </Link>
         )
@@ -192,7 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="relative isolate flex min-h-svh">
-      <AnimatedBackdrop />
+
       <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex print:hidden">
         <Link to="/" className="px-5 py-5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
           <Logo />
