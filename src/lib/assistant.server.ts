@@ -1,8 +1,11 @@
-// Solo servidor: el sufijo .server impide que este módulo (y LOVABLE_API_KEY) llegue al navegador.
+// Solo servidor: el sufijo .server impide que este módulo (y las claves de IA) lleguen al navegador.
 
+import Anthropic from '@anthropic-ai/sdk'
 import type { AssistantErrorCode, ChatMessage } from './assistant.types'
 
-interface Provider {
+const CLAUDE_MODEL = 'claude-opus-5-5'
+
+interface OpenAICompatibleProvider {
   name: string
   url: string
   apiKey: string
@@ -10,10 +13,13 @@ interface Provider {
 }
 
 /**
- * Dentro de Lovable se usa su AI Gateway (LOVABLE_API_KEY). Fuera de Lovable (ej. Vercel) se usa la API de
- * Google Gemini con la clave propia del usuario (GEMINI_API_KEY). Ambas son compatibles con la API de OpenAI.
+ * Orden de preferencia:
+ * 1. Claude (ANTHROPIC_API_KEY), con el SDK oficial de Anthropic.
+ * 2. AI Gateway de Lovable (LOVABLE_API_KEY), cuando la app corre dentro de Lovable.
+ * 3. Google Gemini (GEMINI_API_KEY).
+ * Los dos últimos usan la API compatible con OpenAI.
  */
-function resolveProvider(): Provider | null {
+function resolveOpenAICompatible(): OpenAICompatibleProvider | null {
   const lovable = process.env['LOVABLE_API_KEY']
   if (lovable) {
     return {
@@ -65,9 +71,12 @@ export type GatewayResult =
   | { ok: false; code: AssistantErrorCode }
 
 export async function streamAssistantReply(messages: ChatMessage[], context: string): Promise<GatewayResult> {
-  const provider = resolveProvider()
+  const anthropicKey = process.env['ANTHROPIC_API_KEY']
+  if (anthropicKey) return streamFromClaude(anthropicKey, messages, context)
+
+  const provider = resolveOpenAICompatible()
   if (!provider) {
-    console.error('Nexa: no hay clave de IA. Configura GEMINI_API_KEY (o LOVABLE_API_KEY dentro de Lovable).')
+    console.error('Nexa: no hay clave de IA. Configura ANTHROPIC_API_KEY (o GEMINI_API_KEY / LOVABLE_API_KEY).')
     return { ok: false, code: 'config' }
   }
 
@@ -100,6 +109,78 @@ export async function streamAssistantReply(messages: ChatMessage[], context: str
   }
 
   return { ok: true, stream: response.body.pipeThrough(sseToText()) }
+}
+
+const encoder = new TextEncoder()
+
+/** Claude: streaming con el SDK oficial; devuelve solo el texto de la respuesta (el razonamiento no se muestra). */
+async function streamFromClaude(apiKey: string, messages: ChatMessage[], context: string): Promise<GatewayResult> {
+  const client = new Anthropic({ apiKey })
+  const stream = client.beta.messages.stream({
+    model: process.env['ANTHROPIC_MODEL'] || CLAUDE_MODEL,
+    max_tokens: 16000,
+    output_config: { effort: 'medium' },
+    // Si el modelo rechaza una petición por sus filtros de seguridad, la API reintenta con un modelo de respaldo.
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default',
+    system: [
+      { type: 'text', text: SYSTEM_PROMPT },
+      // El resumen de datos se repite en cada pregunta: se cachea para que las siguientes sean más baratas y rápidas.
+      { type: 'text', text: `<datos>\n${context}\n</datos>`, cache_control: { type: 'ephemeral' } },
+    ],
+    messages,
+  })
+  const events = stream[Symbol.asyncIterator]()
+
+  // Espera el primer evento para detectar errores de clave, límite o créditos antes de responder al navegador.
+  let first: IteratorResult<Anthropic.Beta.Messages.BetaRawMessageStreamEvent>
+  try {
+    first = await events.next()
+  } catch (error) {
+    return { ok: false, code: claudeErrorCode(error) }
+  }
+
+  const textOf = (event: Anthropic.Beta.Messages.BetaRawMessageStreamEvent) =>
+    event.type === 'content_block_delta' && event.delta.type === 'text_delta' ? event.delta.text : ''
+
+  let pending: IteratorResult<Anthropic.Beta.Messages.BetaRawMessageStreamEvent> | null = first
+  return {
+    ok: true,
+    stream: new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        try {
+          for (;;) {
+            const result = pending ?? (await events.next())
+            pending = null
+            if (result.done) {
+              controller.close()
+              return
+            }
+            const text = textOf(result.value)
+            if (text) {
+              controller.enqueue(encoder.encode(text))
+              return
+            }
+          }
+        } catch (error) {
+          console.error('Nexa: Claude cortó la respuesta', error)
+          controller.error(error)
+        }
+      },
+      cancel() {
+        stream.abort()
+      },
+    }),
+  }
+}
+
+function claudeErrorCode(error: unknown): AssistantErrorCode {
+  console.error('Nexa: error de Claude', error)
+  if (error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError) return 'config'
+  if (error instanceof Anthropic.RateLimitError) return 'rate_limit'
+  // Sin saldo, la API responde 400; el tipo de error no lo distingue, así que se revisa el mensaje.
+  if (error instanceof Anthropic.BadRequestError && /credit balance/i.test(error.message)) return 'credits'
+  return 'unavailable'
 }
 
 /** Convierte el stream SSE de chat/completions en el texto plano de cada delta. */
