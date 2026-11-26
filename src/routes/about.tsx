@@ -25,7 +25,7 @@ function About() {
             estadística descriptiva y comparaciones entre periodos para que tomes mejores decisiones.
           </p>
           <p>
-            <span className="font-medium">Equipo fundador:</span> Juan Fernando Carvajar, Daniel Andres Suarez Ramirez y Juan Manuel.
+            <span className="font-medium">Equipo fundador:</span> Juan Fernando Carvajal, Daniel Andres Suarez Ramirez y Juan Manuel.
           </p>
           <p className="text-muted-foreground">
             Este prototipo guarda los datos solo en este navegador. Puedes restablecer los datos de ejemplo en cualquier momento.

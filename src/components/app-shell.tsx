@@ -56,7 +56,7 @@ const NAV: NavItem[] = [
   { href: '/about', label: 'About NexaMetrics', icon: Info },
 ]
 
-const FOUNDERS = 'Juan Fernando Carvajar, Daniel Andres Suarez Ramirez y Juan Manuel'
+const FOUNDERS = 'Juan Fernando Carvajal, Daniel Andres Suarez Ramirez y Juan Manuel'
 
 function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
@@ -84,7 +84,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   )
 }
 
-const FOUNDER_LIST = ['Juan Fernando Carvajar', 'Daniel Andres Suarez Ramirez', 'Juan Manuel']
+const FOUNDER_LIST = ['Juan Fernando Carvajal', 'Daniel Andres Suarez Ramirez', 'Juan Manuel']
 
 const initials = (name: string) =>
   name
