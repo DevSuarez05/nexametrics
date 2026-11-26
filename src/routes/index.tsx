@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Activity, Percent, Receipt, Scale, ShoppingCart, Trophy } from 'lucide-react'
-import { DistributionPie, GroupedBars, PURCHASE_SERIES, SALES_SERIES, TrendLines } from '@/components/charts'
+import { GroupedBars, PURCHASE_SERIES, SALES_SERIES, TrendLines } from '@/components/charts'
 import { KpiCard, NoData, PageHeader, PageSkeleton } from '@/components/common'
 import { OperationsTable } from '@/components/operations-page'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,13 +23,6 @@ function Overview() {
   const products = productStats(activeOperations, costBasis).slice(0, 6)
   const top = topByTotal(activeOperations, 5)
   const best = products[0]
-  const bySales = productStats(activeOperations, costBasis)
-    .filter((p) => p.salesTotal > 0)
-    .sort((a, b) => b.salesTotal - a.salesTotal)
-  const pieData = [
-    ...bySales.slice(0, 4).map((p) => ({ name: shortName(p.name), value: p.salesTotal })),
-    ...(bySales.length > 4 ? [{ name: 'Otros', value: bySales.slice(4).reduce((acc, p) => acc + p.salesTotal, 0) }] : []),
-  ]
 
   return (
     <div className="flex flex-col gap-6">
@@ -53,19 +46,6 @@ function Overview() {
       <div className="grid gap-4 @5xl/main:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Distribución de ventas por producto</CardTitle>
-            <CardDescription>Participación de cada producto en el total vendido</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {pieData.length ? (
-              <DistributionPie data={pieData} format={formatCOP} label="Distribución de ventas por producto" />
-            ) : (
-              <NoData />
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
             <CardTitle>Tendencia mensual</CardTitle>
             <CardDescription>Compras y ventas por mes</CardDescription>
           </CardHeader>
@@ -77,28 +57,28 @@ function Overview() {
             )}
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Productos principales</CardTitle>
+            <CardDescription>Valor comprado y vendido por producto</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {products.length ? (
+              <GroupedBars
+                horizontal
+                data={products.map((p) => ({ name: shortName(p.name), compras: p.purchaseTotal, ventas: p.salesTotal }))}
+                categoryKey="name"
+                series={[PURCHASE_SERIES, SALES_SERIES]}
+                format={formatCOP}
+                tickFormat={formatCompact}
+                label="Compras y ventas por producto"
+              />
+            ) : (
+              <NoData />
+            )}
+          </CardContent>
+        </Card>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Productos principales</CardTitle>
-          <CardDescription>Valor comprado y vendido por producto</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {products.length ? (
-            <GroupedBars
-              horizontal
-              data={products.map((p) => ({ name: shortName(p.name), compras: p.purchaseTotal, ventas: p.salesTotal }))}
-              categoryKey="name"
-              series={[PURCHASE_SERIES, SALES_SERIES]}
-              format={formatCOP}
-              tickFormat={formatCompact}
-              label="Compras y ventas por producto"
-            />
-          ) : (
-            <NoData />
-          )}
-        </CardContent>
-      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Operaciones de mayor valor</CardTitle>

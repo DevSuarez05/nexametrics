@@ -156,7 +156,7 @@ export function DistributionPie({
   )
   return (
     <div className={cn('pie-animate flex flex-col items-center gap-4 @2xl/main:flex-row', className)}>
-      <ChartContainer config={config} className="aspect-square h-52 w-52 shrink-0" role="img" aria-label={label}>
+      <ChartContainer config={config} className="aspect-square h-60 w-60 shrink-0" role="img" aria-label={label}>
         <PieChart>
           <ChartTooltip
             content={<ChartTooltipContent hideLabel formatter={(value, name) => `${String(name)}: ${format(Number(value))}`} />}
