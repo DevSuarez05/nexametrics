@@ -141,13 +141,19 @@
   }
 }
 
-.signal-art {
-  color: var(--success);
-  opacity: .48;
-  background: radial-gradient(ellipse at 68% 60%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 72%);
-  mask-image: linear-gradient(90deg, transparent, black 22%, black 82%, transparent);
+.brand-backdrop {
+  background: radial-gradient(ellipse at 95% 8%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 48%);
 }
-.signal-art:has(canvas) > svg { visibility: hidden; }
+.brand-field { position:absolute; top:0; right:-2rem; width:min(34rem,90%); height:15rem; opacity:.39; }
+.brand-field-echo { left:-3rem; top:24rem; transform:rotate(14deg); opacity:.25; }
+.brand-imprints { position:absolute; inset:0; }
+.brand-field:has(canvas) > .brand-imprints { visibility:hidden; }
+.brand-imprints svg { position:absolute; width:32%; height:auto; left:5%; top:8%; transform:perspective(32rem) rotateX(32deg) rotateY(-24deg) rotateZ(-18deg); filter:drop-shadow(1px 2px 0 #287c77) drop-shadow(2px 3px 0 #287c77) drop-shadow(4px 8px 5px #174b532c); }
+.brand-imprints svg:nth-child(2) { left:63%; top:44%; width:21%; transform:rotateX(26deg) rotateY(20deg) rotateZ(19deg); }
+.brand-imprints svg:nth-child(3) { left:49%; top:7%; width:11%; transform:rotate(-10deg); }
+.brand-imprints rect { fill:#80cac0; }
+.brand-imprints path { stroke:#246967; }
+.brand-imprints circle { fill:#246967; }
 @media (prefers-reduced-motion: no-preference) {
   [data-slot='button']:enabled:active { scale: .97; transition: scale 100ms ease-out; }
 }

@@ -1,52 +1,36 @@
-import { useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import { Canvas, useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
+import { Group, Shape } from 'three'
 
-function SignalRibbon() {
-  const group = useRef<THREE.Group>(null);
-  const positions = useMemo(() => {
-    const vertices: number[] = [];
-    const point = (x: number, lane: number) => [
-      x,
-      Math.sin(x * 1.25 + lane * 0.8) * 0.55 + Math.sin(x * 0.7) * 0.24 + lane * 0.27,
-      lane * 0.7,
-    ];
-    for (let i = 0; i < 16; i++) {
-      const lane = (i / 15) * 2 - 1;
-      for (let j = 0; j < 100; j++)
-        vertices.push(...point(-6 + j * 0.12, lane), ...point(-6 + (j + 1) * 0.12, lane));
-    }
-    return new Float32Array(vertices);
-  }, []);
+const plate = new Shape()
+plate.moveTo(-0.68, -1)
+plate.lineTo(0.68, -1); plate.quadraticCurveTo(1, -1, 1, -0.68)
+plate.lineTo(1, 0.68); plate.quadraticCurveTo(1, 1, 0.68, 1)
+plate.lineTo(-0.68, 1); plate.quadraticCurveTo(-1, 1, -1, 0.68)
+plate.lineTo(-1, -0.68); plate.quadraticCurveTo(-1, -1, -0.68, -1)
+const nodes = [[-.53, -.41], [-.16, .06], [.16, -.16], [.53, .44]] as const
+const extrusion = { depth: .16, bevelThickness: .04, bevelSize: .04, bevelSegments: 3 }
+
+function Medallion({ x, y, scale, angle }: { x: number; y: number; scale: number; angle: number }) {
+  const group = useRef<Group>(null)
   useFrame(({ clock }) => {
-    if (!group.current) return;
-    const phase = clock.elapsedTime * 0.18;
-    group.current.rotation.x = 0.3 + Math.sin(phase) * 0.09;
-    group.current.position.x = Math.sin(phase * 0.7) * 0.12;
-  });
-  return (
-    <group ref={group}>
-      <lineSegments>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        </bufferGeometry>
-        <lineBasicMaterial color="#279e91" transparent opacity={0.8} depthWrite={false} />
-      </lineSegments>
-    </group>
-  );
+    if (group.current) group.current.rotation.y = -.42 + Math.sin(clock.elapsedTime * .13 + angle) * .12
+  })
+  return <group ref={group} position={[x,y,0]} rotation={[.46,-.42,angle]} scale={scale}>
+    <mesh><extrudeGeometry args={[plate, extrusion]} /><meshStandardMaterial color="#64bdb2" metalness={.46} roughness={.3} /></mesh>
+    {nodes.map(([u,v], i) => {
+      const next = nodes[i+1]
+      return <group key={u}>
+        <mesh position={[u,v,.22]}><sphereGeometry args={[.15,16,12]} /><meshStandardMaterial color="#12565c" /></mesh>
+        {next && <mesh position={[(u+next[0])/2,(v+next[1])/2,.22]} rotation={[0,0,-Math.atan2(next[0]-u,next[1]-v)]}><cylinderGeometry args={[.065,.065,Math.hypot(next[0]-u,next[1]-v),12]} /><meshStandardMaterial color="#12565c" /></mesh>}
+      </group>
+    })}
+  </group>
 }
 
-export default function SignalScene() {
-  return (
-    <div className="signal-canvas absolute inset-0">
-      <Canvas
-        camera={{ position: [0, 0, 4], fov: 40 }}
-        dpr={[1, 1.25]}
-        gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
-        fallback={null}
-      >
-        <SignalRibbon />
-      </Canvas>
-    </div>
-  );
+export default function BrandScene() {
+  return <Canvas orthographic camera={{position:[0,0,12], zoom:65}} dpr={1} gl={{ alpha:true, antialias:true, powerPreference:'low-power' }}>
+    <ambientLight intensity={1.6}/><directionalLight position={[-3,5,5]} intensity={3}/>
+    <Medallion x={-2.35} y={.3} scale={1.35} angle={-.4}/><Medallion x={1.75} y={-.5} scale={.85} angle={.42}/><Medallion x={.25} y={.92} scale={.43} angle={-.18}/>
+  </Canvas>
 }
