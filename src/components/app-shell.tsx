@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { BrandBackdrop } from '@/components/brand-backdrop'
 import { GlobalFilters } from '@/components/global-filters'
 import { Logo } from '@/components/logo'
+import { NexaAssistant } from '@/components/nexa-assistant'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -230,6 +231,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           {FOUNDERS}. Prototipo con persistencia local: los datos se guardan solo en este navegador.
         </footer>
       </div>
+
+      <NexaAssistant />
     </div>
   )
 }
