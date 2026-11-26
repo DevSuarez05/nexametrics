@@ -141,18 +141,13 @@
   }
 }
 
-.signal-banner {
-  background: radial-gradient(ellipse at 88% 80%, #124043, transparent 60%), #101b30;
-  color: #f3faf9;
-}
 .signal-art {
-  background-image: linear-gradient(#7edbc20e 1px, transparent 1px), linear-gradient(90deg, #7edbc20e 1px, transparent 1px);
-  background-size: 24px 24px;
-  color: #55e1c7;
-  mask-image: linear-gradient(90deg, transparent, black 32%);
+  color: var(--success);
+  opacity: .48;
+  background: radial-gradient(ellipse at 68% 60%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 72%);
+  mask-image: linear-gradient(90deg, transparent, black 22%, black 82%, transparent);
 }
 .signal-art:has(canvas) > svg { visibility: hidden; }
-@media (max-width: 767px) { .signal-art { opacity: .35; mask-image: linear-gradient(90deg, transparent 10%, black 90%); } }
 @media (prefers-reduced-motion: no-preference) {
   [data-slot='button']:enabled:active { scale: .97; transition: scale 100ms ease-out; }
 }

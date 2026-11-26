@@ -39,9 +39,9 @@ export function OverviewHeader() {
     <section
       ref={panel}
       aria-labelledby="overview-title"
-      className="signal-banner relative isolate overflow-hidden rounded-2xl px-6 py-7 sm:px-8 sm:py-9"
+      className="relative isolate flex items-stretch gap-6 overflow-hidden border-b border-border pb-4"
     >
-      <div aria-hidden="true" className="signal-art absolute inset-y-0 right-0 w-2/3 sm:w-1/2">
+      <div aria-hidden="true" className="signal-art pointer-events-none relative order-last ml-auto hidden w-1/3 max-w-sm shrink-0 select-none overflow-hidden sm:block print:hidden">
         <svg
           viewBox="0 0 400 180"
           preserveAspectRatio="none"
@@ -66,17 +66,12 @@ export function OverviewHeader() {
           </SceneBoundary>
         )}
       </div>
-      <div className="pointer-events-none relative max-w-md">
-        <div className="mb-4 flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[.18em] text-sidebar-primary uppercase">
-          <AudioLines className="size-4" aria-hidden="true" /> Centro de operaciones
+      <div className="min-w-0">
+        <div className="mb-1 flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[.15em] text-muted-foreground uppercase">
+          <AudioLines className="size-3.5 text-success" aria-hidden="true" /> Centro de operaciones
         </div>
-        <h1 id="overview-title" className="text-4xl font-semibold tracking-tight sm:text-5xl">
-          Overview
-        </h1>
-        <p className="mt-3 max-w-sm text-sm leading-relaxed text-sidebar-foreground/85">
-          Conoce tus números de un vistazo: lo que compras, lo que vendes y la diferencia entre
-          ambos.
-        </p>
+        <h1 id="overview-title" className="text-3xl font-semibold tracking-tight">Overview</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Compras, ventas y margen del período seleccionado.</p>
       </div>
     </section>
   );
