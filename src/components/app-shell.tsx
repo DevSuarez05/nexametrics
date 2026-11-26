@@ -1,6 +1,26 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+
+const ThreeBackground = lazy(() => import('@/components/three-background'))
+
+function AnimatedBackdrop() {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setReady(true)
+  }, [])
+  return (
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 opacity-60 animate-fade-in print:hidden">
+      <div className="absolute -top-32 -left-24 size-96 rounded-full bg-chart-1/20 blur-3xl animate-blob" />
+      <div className="absolute top-1/3 -right-24 size-96 rounded-full bg-chart-2/20 blur-3xl animate-blob [animation-delay:-6s]" />
+      {ready && (
+        <Suspense fallback={null}>
+          <ThreeBackground />
+        </Suspense>
+      )}
+    </div>
+  )
+}
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import {
@@ -171,7 +191,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const current = NAV.find((item) => item.href === pathname)
 
   return (
-    <div className="flex min-h-svh">
+    <div className="relative isolate flex min-h-svh">
+      <AnimatedBackdrop />
       <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex print:hidden">
         <Link to="/" className="px-5 py-5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
           <Logo />
@@ -218,7 +239,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {pathname !== '/about' && <GlobalFilters />}
 
-        <main className="@container/main flex-1 p-4 lg:p-6">{children}</main>
+        <main key={pathname} className="@container/main flex-1 p-4 lg:p-6 animate-page-in">{children}</main>
 
         <footer className="border-t px-4 py-4 text-xs leading-relaxed text-muted-foreground lg:px-6 print:hidden">
           <span className="font-medium text-foreground">NexaMetrics</span> · Turn Data Into Decisions. Fundado por{' '}
