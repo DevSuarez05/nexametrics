@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { BrandBackdrop } from '@/components/brand-backdrop'
 import { GlobalFilters } from '@/components/global-filters'
 import { Logo } from '@/components/logo'
 import {
@@ -219,7 +220,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {pathname !== '/about' && <GlobalFilters />}
 
-        <main key={pathname} className="@container/main flex-1 p-4 lg:p-6 animate-page-in">{children}</main>
+        <main key={pathname} className="@container/main relative isolate flex-1 p-4 lg:p-6 animate-page-in">
+          {pathname === '/' && <BrandBackdrop />}
+          {children}
+        </main>
 
         <footer className="border-t px-4 py-4 text-xs leading-relaxed text-muted-foreground lg:px-6 print:hidden">
           <span className="font-medium text-foreground">NexaMetrics</span> · Turn Data Into Decisions. Fundado por{' '}

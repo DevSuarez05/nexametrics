@@ -28,7 +28,7 @@ function Overview() {
   return (
     <div className="flex flex-col gap-6">
       <OverviewHeader />
-      <div className="grid grid-cols-2 gap-4 @4xl/main:grid-cols-3 @6xl/main:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 [&>[data-slot=card]]:bg-card/80 @4xl/main:grid-cols-3 @6xl/main:grid-cols-6">
         <KpiCard label="Total compras" value={formatCOP(s.purchaseTotal)} icon={ShoppingCart} detail={`${s.purchaseCount} operaciones`} />
         <KpiCard label="Total ventas" value={formatCOP(s.salesTotal)} icon={Receipt} detail={`${s.saleCount} operaciones`} />
         <KpiCard label="Diferencia" value={formatCOP(s.difference)} icon={Scale} detail="Ventas − compras" />
