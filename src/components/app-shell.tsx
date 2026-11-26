@@ -174,6 +174,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="relative isolate flex min-h-svh">
+      <BrandBackdrop />
 
       <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex print:hidden">
         <Link to="/" className="px-5 py-5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
@@ -222,7 +223,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         {pathname !== '/about' && <GlobalFilters />}
 
         <main key={pathname} className="@container/main relative isolate flex-1 p-4 lg:p-6 animate-page-in">
-          {pathname === '/' && <BrandBackdrop />}
           {children}
         </main>
 
