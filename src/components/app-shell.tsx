@@ -84,11 +84,34 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   )
 }
 
+const FOUNDER_LIST = ['Juan Fernando Carvajar', 'Daniel Andres Suarez Ramirez', 'Juan Manuel']
+
+const initials = (name: string) =>
+  name
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+
 function SidebarCredits() {
   return (
-    <div className="mt-auto flex flex-col gap-1 border-t border-sidebar-border px-5 py-4 text-xs leading-relaxed text-sidebar-foreground/65">
-      <span className="font-medium text-sidebar-foreground/85">Equipo fundador</span>
-      <span>{FOUNDERS}</span>
+    <div className="mt-auto border-t border-sidebar-border px-4 py-4">
+      <div className="founders-card">
+        <span className="flex items-center gap-2 text-[11px] font-semibold tracking-widest text-sidebar-primary uppercase">
+          <span className="founders-pulse" aria-hidden="true" />
+          Equipo fundador
+        </span>
+        <ul className="mt-3 flex flex-col gap-1.5">
+          {FOUNDER_LIST.map((name, index) => (
+            <li key={name} className="founder-item" style={{ animationDelay: `${150 + index * 120}ms` }}>
+              <span className="founder-avatar" aria-hidden="true">
+                {initials(name)}
+              </span>
+              <span className="text-xs leading-tight font-medium text-sidebar-foreground/90">{name}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }

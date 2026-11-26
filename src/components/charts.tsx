@@ -1,6 +1,6 @@
 'use client'
 
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from 'recharts'
 import {
   ChartContainer,
   ChartLegend,
@@ -129,5 +129,63 @@ export function TrendLines({ data, categoryKey, series, format, tickFormat = for
         ))}
       </LineChart>
     </ChartContainer>
+  )
+}
+
+export interface PieSlice {
+  name: string
+  value: number
+}
+
+const PIE_COLORS: string[] = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
+
+export function DistributionPie({
+  data,
+  format,
+  label,
+  className,
+}: {
+  data: PieSlice[]
+  format: (value: number) => string
+  label: string
+  className?: string
+}) {
+  const total = data.reduce((acc, d) => acc + d.value, 0)
+  const config: ChartConfig = Object.fromEntries(
+    data.map((d, i) => [d.name, { label: d.name, color: PIE_COLORS[i % PIE_COLORS.length]! }]),
+  )
+  return (
+    <div className={cn('pie-animate flex flex-col items-center gap-4 @2xl/main:flex-row', className)}>
+      <ChartContainer config={config} className="aspect-square h-60 w-60 shrink-0" role="img" aria-label={label}>
+        <PieChart>
+          <ChartTooltip
+            content={<ChartTooltipContent hideLabel formatter={(value, name) => `${String(name)}: ${format(Number(value))}`} />}
+          />
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={58}
+            outerRadius={100}
+            paddingAngle={2}
+            strokeWidth={2}
+            animationDuration={900}
+          >
+            {data.map((d, i) => (
+              <Cell key={d.name} fill={PIE_COLORS[i % PIE_COLORS.length]!} stroke="var(--card)" />
+            ))}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+      <ul className="flex w-full flex-col gap-2 text-sm">
+        {data.map((d, i) => (
+          <li key={d.name} className="flex items-center gap-2">
+            <span className="size-2.5 shrink-0 rounded-[2px]" style={{ background: PIE_COLORS[i % PIE_COLORS.length]! }} aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">{d.name}</span>
+            <span className="tabular-nums text-muted-foreground">{total ? ((d.value / total) * 100).toFixed(1) : '0'}%</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
