@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- App data lives in the browser via `src/lib/store.tsx` (localStorage + SWR), mirroring the original prototype; pages read it through `useNexa()` and show `PageSkeleton` until hydrated, since SSR has no storage.
+- UI primitives in `src/components/ui` are the shadcn base-ui variant (`@base-ui/react`, `render` prop instead of `asChild`); keep new primitives on the same flavor.

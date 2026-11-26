@@ -1,0 +1,9 @@
+{"capabilities":[
+{"capability":"code","source":"Next.js 16 (v0) app","outcome":"migrate to TanStack Start","status":"verified","next_action":"original page files absent from archive; screens rebuilt from shared logic, swap in originals if user provides them"},
+{"capability":"schema/records","source":"localStorage seed (lib/seed.ts), single-browser simulation","outcome":"preserve localStorage behavior","status":"verified","next_action":"none"},
+{"capability":"auth","source":"none","outcome":"none","status":"verified","next_action":"none"},
+{"capability":"analytics","source":"@vercel/analytics","outcome":"dropped: Vercel-only, Lovable hosting has built-in analytics","status":"accepted","next_action":"none"},
+{"capability":"three.js deps","source":"package.json only, unused","outcome":"not installed","status":"accepted","next_action":"none"},
+{"capability":"secrets/webhooks/schedules/storage","source":"none","outcome":"none","status":"verified","next_action":"none"},
+{"capability":"verification","source":"-","outcome":"typecheck, all routes render, create purchase persists after reload","status":"verified","next_action":"none"}
+]}
