@@ -18,12 +18,16 @@ const SUGGESTIONS = [
   '¿Cuál fue el producto más vendido este mes?',
   '¿Por qué bajó el margen frente al mes pasado?',
   '¿Qué debería comprar la próxima semana?',
-  'Resume mis ventas y compras del último trimestre',
+  '¿Quién es mi mejor cliente?',
+  '¿Qué proveedor me vende más caro?',
+  '¿Cómo exporto mis datos a Google Sheets?',
 ]
 
 const ERRORS: Record<AssistantErrorCode | 'network', string> = {
   rate_limit: 'Nexa recibió demasiadas preguntas seguidas. Espera un momento y vuelve a intentarlo.',
-  credits: 'Se agotaron los créditos de IA del proyecto. Recárgalos en Lovable para seguir usando a Nexa.',
+  credits: 'Se agotaron los créditos de IA del proyecto. Recárgalos para seguir usando a Nexa.',
+  config:
+    'Nexa aún no está configurado: falta una clave de IA válida en el servidor (GEMINI_API_KEY en Vercel). Pídele al administrador que la agregue.',
   unavailable: 'Nexa no está disponible en este momento. Inténtalo de nuevo en unos minutos.',
   network: 'No se pudo conectar con Nexa. Revisa tu conexión e inténtalo de nuevo.',
 }
