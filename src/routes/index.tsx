@@ -53,6 +53,19 @@ function Overview() {
       <div className="grid gap-4 @5xl/main:grid-cols-2">
         <Card>
           <CardHeader>
+            <CardTitle>Distribución de ventas por producto</CardTitle>
+            <CardDescription>Participación de cada producto en el total vendido</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pieData.length ? (
+              <DistributionPie data={pieData} format={formatCOP} label="Distribución de ventas por producto" />
+            ) : (
+              <NoData />
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
             <CardTitle>Tendencia mensual</CardTitle>
             <CardDescription>Compras y ventas por mes</CardDescription>
           </CardHeader>
@@ -64,36 +77,23 @@ function Overview() {
             )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Productos principales</CardTitle>
-            <CardDescription>Valor comprado y vendido por producto</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {products.length ? (
-              <GroupedBars
-                horizontal
-                data={products.map((p) => ({ name: shortName(p.name), compras: p.purchaseTotal, ventas: p.salesTotal }))}
-                categoryKey="name"
-                series={[PURCHASE_SERIES, SALES_SERIES]}
-                format={formatCOP}
-                tickFormat={formatCompact}
-                label="Compras y ventas por producto"
-              />
-            ) : (
-              <NoData />
-            )}
-          </CardContent>
-        </Card>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Distribución de ventas por producto</CardTitle>
-          <CardDescription>Participación de cada producto en el total vendido</CardDescription>
+          <CardTitle>Productos principales</CardTitle>
+          <CardDescription>Valor comprado y vendido por producto</CardDescription>
         </CardHeader>
         <CardContent>
-          {pieData.length ? (
-            <DistributionPie data={pieData} format={formatCOP} label="Distribución de ventas por producto" />
+          {products.length ? (
+            <GroupedBars
+              horizontal
+              data={products.map((p) => ({ name: shortName(p.name), compras: p.purchaseTotal, ventas: p.salesTotal }))}
+              categoryKey="name"
+              series={[PURCHASE_SERIES, SALES_SERIES]}
+              format={formatCOP}
+              tickFormat={formatCompact}
+              label="Compras y ventas por producto"
+            />
           ) : (
             <NoData />
           )}
