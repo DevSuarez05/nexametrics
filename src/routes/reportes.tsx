@@ -1,11 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Download, Printer } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Download, FileSpreadsheet, Loader2, Printer } from 'lucide-react'
+import { toast } from 'sonner'
 import { PageHeader, PageSkeleton } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { describeFilters, monthlySeries, summarize } from '@/lib/analytics'
 import { formatCOP, formatNumber, formatPercent, monthLabelLong } from '@/lib/format'
+import { buildWorkbook, exportToGoogleSheets, googleClientId, GoogleSheetsError, loadGoogleIdentity } from '@/lib/google-sheets'
 import { pageHead } from '@/lib/seo'
 import { useNexa } from '@/lib/store'
 
@@ -13,6 +16,47 @@ export const Route = createFileRoute('/reportes')({
   head: () => pageHead('Reportes', 'Reporte imprimible y exportable de compras y ventas.'),
   component: Reportes,
 })
+
+function GoogleSheetsButton() {
+  const { activeOperations, purchases, sales, costBasis, filters, products } = useNexa()
+  const [busy, setBusy] = useState(false)
+
+  // Precarga el script de Google para que el popup de inicio de sesión se abra dentro del gesto del clic.
+  useEffect(() => {
+    if (googleClientId()) loadGoogleIdentity().catch(() => {})
+  }, [])
+
+  const exportSheets = async () => {
+    setBusy(true)
+    try {
+      const url = await exportToGoogleSheets(
+        buildWorkbook({ operations: [...purchases, ...sales], activeOperations, costBasis, filters, products }),
+      )
+      toast.success('Reporte creado en tu Google Drive', {
+        description: 'Pestañas: Resumen, Por mes, Por producto y Operaciones.',
+        action: { label: 'Abrir', onClick: () => window.open(url, '_blank', 'noopener') },
+        duration: 15_000,
+      })
+    } catch (error) {
+      toast.error(
+        error instanceof GoogleSheetsError ? error.message : 'No se pudo exportar a Google Sheets. Inténtalo de nuevo.',
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Button variant="outline" onClick={() => void exportSheets()} disabled={busy}>
+      {busy ? (
+        <Loader2 data-icon="inline-start" className="animate-spin" />
+      ) : (
+        <FileSpreadsheet data-icon="inline-start" />
+      )}
+      {busy ? 'Exportando…' : 'Exportar a Google Sheets'}
+    </Button>
+  )
+}
 
 function Reportes() {
   const { ready, activeOperations, purchases, sales, costBasis, filters, products } = useNexa()
@@ -47,6 +91,7 @@ function Reportes() {
               <Download data-icon="inline-start" />
               Exportar CSV
             </Button>
+            <GoogleSheetsButton />
             <Button onClick={() => window.print()}>
               <Printer data-icon="inline-start" />
               Imprimir
