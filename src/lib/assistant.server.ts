@@ -13,32 +13,46 @@ interface OpenAICompatibleProvider {
 }
 
 /**
- * Orden de preferencia:
+ * Orden de preferencia (la primera clave configurada gana):
  * 1. Claude (ANTHROPIC_API_KEY), con el SDK oficial de Anthropic.
- * 2. AI Gateway de Lovable (LOVABLE_API_KEY), cuando la app corre dentro de Lovable.
- * 3. Google Gemini (GEMINI_API_KEY).
- * Los dos últimos usan la API compatible con OpenAI.
+ * 2. Grok de xAI (XAI_API_KEY).
+ * 3. NVIDIA API Catalog / NIM (NVIDIA_API_KEY).
+ * 4. Google Gemini (GEMINI_API_KEY).
+ * 5. AI Gateway de Lovable (LOVABLE_API_KEY), que Lovable crea automáticamente dentro de su plataforma.
+ * Del 2 al 5 usan la API compatible con OpenAI. El modelo de cada uno se puede cambiar con su variable *_MODEL.
  */
 function resolveOpenAICompatible(): OpenAICompatibleProvider | null {
-  const lovable = process.env['LOVABLE_API_KEY']
-  if (lovable) {
-    return {
-      name: 'Lovable',
-      url: 'https://ai.gateway.lovable.dev/v1/chat/completions',
-      apiKey: lovable,
-      model: 'google/gemini-2.5-flash',
-    }
-  }
-  const gemini = process.env['GEMINI_API_KEY']
-  if (gemini) {
-    return {
-      name: 'Gemini',
-      url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-      apiKey: gemini,
-      model: process.env['GEMINI_MODEL'] || 'gemini-2.5-flash',
-    }
-  }
-  return null
+  const env = (name: string) => process.env[name] || undefined
+  const candidates: (OpenAICompatibleProvider | null)[] = [
+    env('XAI_API_KEY')
+      ? { name: 'xAI Grok', url: 'https://api.x.ai/v1/chat/completions', apiKey: env('XAI_API_KEY')!, model: env('XAI_MODEL') ?? 'grok-4' }
+      : null,
+    env('NVIDIA_API_KEY')
+      ? {
+          name: 'NVIDIA',
+          url: 'https://integrate.api.nvidia.com/v1/chat/completions',
+          apiKey: env('NVIDIA_API_KEY')!,
+          model: env('NVIDIA_MODEL') ?? 'meta/llama-3.3-70b-instruct',
+        }
+      : null,
+    env('GEMINI_API_KEY')
+      ? {
+          name: 'Gemini',
+          url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+          apiKey: env('GEMINI_API_KEY')!,
+          model: env('GEMINI_MODEL') ?? 'gemini-2.5-flash',
+        }
+      : null,
+    env('LOVABLE_API_KEY')
+      ? {
+          name: 'Lovable',
+          url: 'https://ai.gateway.lovable.dev/v1/chat/completions',
+          apiKey: env('LOVABLE_API_KEY')!,
+          model: 'google/gemini-2.5-flash',
+        }
+      : null,
+  ]
+  return candidates.find((provider) => provider !== null) ?? null
 }
 
 const SYSTEM_PROMPT = `Eres Nexa, el asistente de IA de NexaMetrics: analista de negocio experto en compras, ventas, inventario y márgenes de pequeñas y medianas empresas. Respondes siempre en español, en tono claro, cercano y directo.
@@ -76,7 +90,7 @@ export async function streamAssistantReply(messages: ChatMessage[], context: str
 
   const provider = resolveOpenAICompatible()
   if (!provider) {
-    console.error('Nexa: no hay clave de IA. Configura ANTHROPIC_API_KEY (o GEMINI_API_KEY / LOVABLE_API_KEY).')
+    console.error('Nexa: no hay clave de IA. Configura ANTHROPIC_API_KEY, XAI_API_KEY, NVIDIA_API_KEY o GEMINI_API_KEY.')
     return { ok: false, code: 'config' }
   }
 
@@ -88,6 +102,7 @@ export async function streamAssistantReply(messages: ChatMessage[], context: str
       body: JSON.stringify({
         model: provider.model,
         stream: true,
+        max_tokens: 4096,
         messages: [{ role: 'system', content: `${SYSTEM_PROMPT}\n\n<datos>\n${context}\n</datos>` }, ...messages],
       }),
     })
@@ -101,8 +116,8 @@ export async function streamAssistantReply(messages: ChatMessage[], context: str
   if (!response.ok || !response.body) {
     const detail = await response.text().catch(() => '')
     console.error(`Nexa: ${provider.name} respondió`, response.status, detail)
-    // Clave inválida o sin permisos (Gemini responde 400 con API_KEY_INVALID).
-    if (response.status === 401 || response.status === 403 || detail.includes('API_KEY_INVALID')) {
+    // Clave inválida, sin permisos o modelo inexistente (revisar la variable *_MODEL): es un problema de configuración.
+    if (response.status === 401 || response.status === 403 || response.status === 404 || detail.includes('API_KEY_INVALID')) {
       return { ok: false, code: 'config' }
     }
     return { ok: false, code: 'unavailable' }
